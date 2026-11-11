@@ -1,0 +1,60 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+#define FIFO1 "fifo1"
+#define FIFO2 "fifo2"
+
+int main()
+{
+    int fd1, fd2;
+    char message[1000];
+    char buffer[1000];
+    int i, characters = 0, words = 0, lines = 0;
+
+    mkfifo(FIFO1, 0666);
+    mkfifo(FIFO2, 0666);
+
+    printf("Enter a message:\n");
+    fgets(message, sizeof(message), stdin);
+
+    fd1 = open(FIFO1, O_WRONLY);
+    write(fd1, message, strlen(message) + 1);
+    close(fd1);
+
+    fd2 = open(FIFO2, O_RDONLY);
+    read(fd2, buffer, sizeof(buffer));
+    close(fd2);
+
+    printf("\nReceived File Content:\n%s\n", buffer);
+
+    for(i = 0; buffer[i] != '\0'; i++)
+    {
+        if(buffer[i] != '\n')
+            characters++;
+
+        if(buffer[i] == ' ' || buffer[i] == '\n')
+            words++;
+
+        if(buffer[i] == '\n')
+            lines++;
+    }
+
+    if(i > 0 && buffer[i-1] != '\n')
+    {
+        words++;
+        lines++;
+    }
+
+    printf("\nCharacters = %d", characters);
+    printf("\nWords = %d", words);
+    printf("\nLines = %d\n", lines);
+
+    unlink(FIFO1);
+    unlink(FIFO2);
+
+    return 0;
+}
