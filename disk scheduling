@@ -1,0 +1,185 @@
+#include <stdio.h>
+
+#include <stdlib.h>
+
+ 
+
+#define MAX 20
+
+#define DISK_SIZE 200   /* Cylinders are 0 to 199 */
+
+ 
+
+void sort(int a[], int n)
+
+{
+
+    int i, j, t;
+
+    for (i = 0; i < n - 1; i++)
+
+        for (j = 0; j < n - i - 1; j++)
+
+            if (a[j] > a[j + 1]) {
+
+                t = a[j]; a[j] = a[j + 1]; a[j + 1] = t;
+
+            }
+
+}
+
+ 
+
+int main(void)
+
+{
+
+    int a[MAX], b[MAX], n, head, i, j;
+
+    int total, visited[MAX] = {0};
+
+ 
+
+    printf("Enter number of requests (1-20): ");
+
+    if (scanf("%d", &n) != 1 || n < 1 || n > MAX) return 1;
+
+    printf("Enter request sequence (0-199): ");
+
+    for (i = 0; i < n; i++) {
+
+        if (scanf("%d", &a[i]) != 1 || a[i] < 0 || a[i] >= DISK_SIZE) {
+
+            printf("Invalid cylinder number.\n"); return 1;
+
+        }
+
+        b[i] = a[i];
+
+    }
+
+    printf("Enter initial head position (0-199): ");
+
+    if (scanf("%d", &head) != 1 || head < 0 || head >= DISK_SIZE) return 1;
+
+ 
+
+    /* SSTF */
+
+    total = 0;
+
+    printf("\nSSTF order: ");
+
+    for (i = 0; i < n; i++) {
+
+        int min = 100000, pos = -1;
+
+        for (j = 0; j < n; j++) {
+
+            int distance = abs(a[j] - head);
+
+            if (!visited[j] && distance < min) {
+
+                min = distance; pos = j;
+
+            }
+
+        }
+
+        visited[pos] = 1;
+
+        total += min;
+
+        head = a[pos];
+
+        printf("%d ", head);
+
+    }
+
+    printf("\nSSTF total head movement = %d\n", total);
+
+ 
+
+    sort(b, n);
+
+    printf("\nEnter initial head position again for SCAN: ");
+
+    scanf("%d", &head);
+
+ 
+
+    /* SCAN: initial direction is toward higher cylinder numbers (away from spindle). */
+
+    total = 0;
+
+    printf("SCAN order: ");
+
+    for (i = 0; i < n; i++)
+
+        if (b[i] >= head) {
+
+            total += abs(b[i] - head); head = b[i]; printf("%d ", head);
+
+        }
+
+    if (head != DISK_SIZE - 1) {
+
+        total += (DISK_SIZE - 1) - head;
+
+        head = DISK_SIZE - 1;
+
+    }
+
+    for (i = n - 1; i >= 0; i--)
+
+        if (b[i] < head) {
+
+            total += abs(b[i] - head); head = b[i]; printf("%d ", head);
+
+        }
+
+    printf("\nSCAN total head movement = %d\n", total);
+
+ 
+
+    printf("\nEnter initial head position again for C-LOOK: ");
+
+    scanf("%d", &head);
+
+ 
+
+    /* C-LOOK: move upward, then jump to the lowest pending request. */
+
+    total = 0;
+
+    printf("C-LOOK order: ");
+
+    i = 0;
+
+    while (i < n && b[i] < head) i++;
+
+ 
+
+    for (j = i; j < n; j++) {
+
+        total += abs(b[j] - head); head = b[j]; printf("%d ", head);
+
+    }
+
+    if (i > 0) {
+
+        total += abs(head - b[0]); head = b[0]; printf("%d ", head);
+
+        for (j = 1; j < i; j++) {
+
+            total += abs(b[j] - head); head = b[j]; printf("%d ", head);
+
+        }
+
+    }
+
+    printf("\nC-LOOK total head movement = %d\n", total);
+
+    return 0;
+
+}
